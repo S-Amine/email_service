@@ -27,7 +27,7 @@ colors = {
 
 print(f"""
 {colors['cyan']}
-Welcome to the email_reading_service Auto Deploy Script
+Welcome to the email_service Auto Deploy Script
 
 The goal of this script is to automate the installation of a microservice in an Ubuntu server.
 It requires the user to specify a list of variables which includes:
