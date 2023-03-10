@@ -18,6 +18,12 @@ from email.utils import parseaddr
 # temporar key for test
 ENCRYPT_KEY = b'HLEPa2zpsEr0JvKaDbGypeB2iIqQzFIPdE7RUdLJOIQ='
 
+class Message(models.Model):
+    email_from = models.EmailField()
+    email_to = models.EmailField()
+    subject = models.CharField(max_length=500)
+    message = models.TextField()
+
 class Contact(models.Model):
     name = models.CharField(max_length=500, null=True,blank=True)
     email = models.EmailField()
@@ -69,20 +75,27 @@ class EmailAccount(models.Model):
                 print("To:", msg["To"])
                 print("-" * 30)
 
-                # Get the email content
-                content = msg.get_payload(decode=True)
+                # Get the HTML content of the email
+                html_content = None
+                for part in msg.walk():
+                    if part.get_content_type() == "text/html":
+                        html_content = part.get_payload(decode=True).decode("utf-8")
+                        break
 
                 # Print the email content
                 print("Content:")
-                print(content)
+                print(html_content)
                 print("-" * 30)
+
+                # Save the email to the database
+                message = Message(email_from=email,
+                                  email_to=msg["To"],
+                                  subject=msg["Subject"],
+                                  message=html_content)
+                message.save()
 
             # Wait for 10 seconds before checking for new messages again
             time.sleep(1)
-
-        # Close the mailbox and logout
-        mail.close()
-        mail.logout()
 
     def send_email(self, to, subject, body):
         # Connect to the SMTP server
