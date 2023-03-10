@@ -1,19 +1,26 @@
 from django.db import models
 import smtplib
 import imaplib
-import email
+import email as python_email
 import time
 from datetime import datetime
-from django.contrib.auth.hashers import make_password, check_password
 from cryptography.fernet import Fernet
 import base64
 import logging
 import traceback
 from django.conf import settings
-import getpass
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.db import IntegrityError
+from email.utils import parseaddr
+
 
 # temporar key for test
 ENCRYPT_KEY = b'HLEPa2zpsEr0JvKaDbGypeB2iIqQzFIPdE7RUdLJOIQ='
+
+class Contact(models.Model):
+    name = models.CharField(max_length=500, null=True,blank=True)
+    email = models.EmailField()
 
 class EmailAccount(models.Model):
     email = models.EmailField()
@@ -48,11 +55,17 @@ class EmailAccount(models.Model):
                 status, msg_data = mail.fetch(num, "(RFC822)")
 
                 # Parse the message into an email object
-                msg = email.message_from_bytes(msg_data[0][1])
+                msg = python_email.message_from_bytes(msg_data[0][1])
+
+                # Get the email address
+                if msg["From"]:
+                    email = msg["From"]
+                else:
+                    email = "unknown"
 
                 # Print the subject and sender of the message
                 print("Subject:", msg["Subject"])
-                print("From:", msg["From"])
+                print("From:", email)
                 print("To:", msg["To"])
                 print("-" * 30)
 
@@ -117,6 +130,55 @@ class EmailAccount(models.Model):
         if os.path.exists(encrypted_password_file_path):
             os.remove(encrypted_password_file_path)
         super().delete(*args, **kwargs)
+
+    def save_contacts(self):
+        # Connect to the IMAP server
+        mail = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+        mail.login(self.email, self.decrypt(self.password))
+
+        # Select the INBOX folder
+        mail.select("INBOX")
+
+        # Search for all messages in the INBOX folder
+        status, messages = mail.search(None, "ALL")
+
+        # Iterate through the messages
+        for num in messages[0].split():
+            try:
+                # Fetch the message data
+                status, msg_data = mail.fetch(num, "(RFC822)")
+
+                # Parse the message into an email object
+                msg = python_email.message_from_bytes(msg_data[0][1])
+
+                # Get the email address
+                email = parseaddr(msg["From"])[1]
+
+                # Validate the email address
+                if email:
+                    try:
+                        validate_email(email)
+                    except ValidationError:
+                        email = None
+
+                # Get the contact name
+                name = None
+                if msg["From"]:
+                    name = parseaddr(msg["From"])[0]
+
+                # Save the contact to the database
+                if email != None:
+                    try:
+                        Contact.objects.create(name=name, email=email)
+                    except IntegrityError:
+                        pass
+            except Exception:
+                # Log the error and continue to the next message
+                logging.getLogger("error_logger").error(traceback.format_exc())
+
+        # Close the mailbox and logout
+        mail.close()
+        mail.logout()
 
     class Meta:
         abstract = False
