@@ -2,10 +2,10 @@ import os
 from celery import Celery
 
 # Set the default Django settings module for the 'celery' program
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'email_reading_service.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'email_service.settings')
 
 # Create an instance of the Celery app
-app = Celery('email_reading_service')
+app = Celery('email_service')
 
 # Load the configuration data from django.conf.settings
 # All configuration keys should have a `CELERY_` prefix
