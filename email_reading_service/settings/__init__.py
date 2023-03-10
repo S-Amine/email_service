@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from email_reading_service.utils import get_django_settings
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -173,3 +174,18 @@ if os.path.exists(".env"):
     RABBITMQ_HOST = sensitive_settings['DJANGO_RABBITMQ_HOST']
     RABBITMQ_USER = sensitive_settings['DJANGO_RABBITMQ_USER']
     RABBITMQ_PASSWORD = sensitive_settings['DJANGO_RABBITMQ_PASSWORD']
+
+
+
+PASSWORD_HASHERS = [
+  'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+  'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+  'django.contrib.auth.hashers.Argon2PasswordHasher',
+  'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+  'django.contrib.auth.hashers.BCryptPasswordHasher',
+  'django.contrib.auth.hashers.SHA1PasswordHasher',
+  'django.contrib.auth.hashers.MD5PasswordHasher',
+  'django.contrib.auth.hashers.UnsaltedSHA1PasswordHasher',
+  'django.contrib.auth.hashers.UnsaltedMD5PasswordHasher',
+  'django.contrib.auth.hashers.CryptPasswordHasher',
+]
