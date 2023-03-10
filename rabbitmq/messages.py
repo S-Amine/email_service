@@ -1,7 +1,7 @@
 from rabbitmq.consumer import Consume
 import json
 from datetime import datetime
-from email_reading_service.utils import colors
+from email_service.utils import colors
 
 class MessageProcessing(Consume):
     """A class for processing messages from RabbitMQ"""

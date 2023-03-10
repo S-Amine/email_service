@@ -1,7 +1,7 @@
 from django.conf import settings
 from rabbitmq.rabbitmq_connector import connect
 import time
-from email_reading_service.utils import colors
+from email_service.utils import colors
 
 class Consume:
     def __init__(self, callback):
